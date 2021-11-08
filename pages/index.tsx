@@ -1,19 +1,35 @@
+import { Session } from '../../gotrue-js/dist/module'
 import type { NextPage } from 'next'
 import Head from 'next/head'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { supabase } from './utilities/constants'
 
 const Home: NextPage = () => {
+  const [session, setSession] = useState<Session | null>(null)
   useEffect(() => {
+    const initialSession = supabase.auth.session()
+    setSession(initialSession)
+    console.log('innitialSession', initialSession)
+
     supabase.auth.onAuthStateChange((event, session) => {
       console.log('event', event)
       console.log('session', session)
+      setSession(session)
     })
   }, [])
 
   const googleSignin = async () => {
     const res = await supabase.auth.signIn({ provider: 'google' })
     console.log('res', res)
+  }
+
+  const signOut = () => {
+    supabase.auth.signOut()
+  }
+
+  const logSession = () => {
+    const currentSession = supabase.auth.session()
+    console.log('session: ', currentSession)
   }
 
   return (
@@ -24,9 +40,21 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="min-h-screen flex justify-center items-center">
-        <button className="py-2 px-8 shadow focus:shadow-none" onClick={googleSignin}>
-          Google Login
-        </button>
+        {session ? (
+          <div>
+            <button className="py-2 px-8 shadow" onClick={logSession}>
+              Log Session
+            </button>
+            <div></div>
+            <button className="py-2 px-8 shadow" onClick={signOut}>
+              Sign out
+            </button>
+          </div>
+        ) : (
+          <button className="py-2 px-8 shadow" onClick={googleSignin}>
+            Google Login
+          </button>
+        )}
       </main>
     </div>
   )
